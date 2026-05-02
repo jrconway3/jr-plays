@@ -1,0 +1,9 @@
+[submodule "wp-content/themes/jr-plays-theme"]
+	path = wp-content/themes/jr-plays-theme
+	url = https://github.com/jrconway3/jr-plays-theme.git
+[submodule "wp-content/plugins/jr-content-core"]
+	path = wp-content/plugins/jr-content-core
+	url = https://github.com/jrconway3/jr-content-core.git
+[submodule "wp-content/plugins/jr-content-admin"]
+	path = wp-content/plugins/jr-content-admin
+	url = https://github.com/jrconway3/jr-content-admin.git
