@@ -1,0 +1,19 @@
+[
+  {
+    "sprint": 101,
+    "number": 9001,
+    "title": "DUMMY task one",
+    "description": "DUMMY issue body text for testing.",
+    "labels": ["dummy-label"]
+  },
+  {
+    "sprint": 101,
+    "number": 9002,
+    "title": "DUMMY task two"
+  },
+  {
+    "sprint": 102,
+    "number": 9003,
+    "title": "DUMMY task three"
+  }
+]

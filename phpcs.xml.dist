@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset name="JR Plays Theme">
+    <description>PHPCS rules for JR Plays.</description>
+    <rule ref="WordPress-Core" />
+    <rule ref="WordPress-Extra" />
+    <file>wp-content/plugins/jr-content-core</file>
+    <file>wp-content/plugins/jr-content-admin</file>
+    <file>tests</file>
+    <file>wp-config.php</file>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+</ruleset>

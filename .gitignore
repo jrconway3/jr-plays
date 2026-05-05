@@ -3,6 +3,10 @@
 .env.docker
 .env.local
 
+# Claude Code context - local only
+CLAUDE.md
+.claude/
+
 # Exports and dumps - local only, never commit
 *.sql
 *.xml

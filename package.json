@@ -1,0 +1,26 @@
+{
+    "name":  "jr-plays",
+    "private":  true,
+    "version":  "0.1.0",
+    "description":  "Cross-platform local development tasks for the JaidynReiman WordPress repo.",
+    "engines":  {
+        "node":  "\u003e=20"
+    },
+    "scripts":  {
+        "dev":  "node scripts/dev.mjs",
+        "build":  "node scripts/build.mjs",
+        "build:local":  "npm run build",
+        "setup:local":  "npm run build",
+        "docker:up":  "node scripts/docker.mjs up",
+        "docker:down":  "node scripts/docker.mjs down",
+        "docker:wp":  "node scripts/wp.mjs",
+        "composer":  "node scripts/composer.mjs",
+        "composer:install":  "node scripts/composer.mjs install",
+        "composer:update":  "node scripts/composer.mjs update",
+        "db:import":  "node scripts/import-db.mjs",
+        "lint":  "node scripts/test.mjs lint",
+        "test:unit":  "node scripts/test.mjs unit",
+        "test":  "node scripts/test.mjs all",
+        "test:urls":  "node scripts/test-urls.mjs"
+    }
+}

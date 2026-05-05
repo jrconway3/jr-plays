@@ -1,0 +1,29 @@
+{
+    "require": {
+        "php": ">=7.4",
+        "michelf/php-markdown": "1.4.0",
+        "michelf/php-smartypants": "1.6.0-beta1",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "phpunit/phpunit": "^9.6",
+        "squizlabs/php_codesniffer": "^3.10",
+        "wp-coding-standards/wpcs": "^3.1"
+    },
+    "scripts": {
+        "setup:local": "node scripts/build.mjs",
+        "lint": "vendor/bin/phpcs --standard=phpcs.xml.dist",
+        "test:unit": "vendor/bin/phpunit --configuration phpunit.xml.dist",
+        "test": [
+            "@lint",
+            "@test:unit"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true
+    }
+}

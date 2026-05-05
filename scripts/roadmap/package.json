@@ -1,0 +1,12 @@
+{
+  "name": "roadmap-tools",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Standalone GitHub roadmap sync script",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "create": "node create-roadmap.mjs"
+  }
+}

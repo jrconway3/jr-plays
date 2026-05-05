@@ -1,0 +1,12 @@
+[
+  {
+    "number": 101,
+    "title": "DUMMY Sprint Alpha",
+    "description": "DUMMY milestone for validating project automation."
+  },
+  {
+    "number": 102,
+    "title": "DUMMY Sprint Beta",
+    "description": "DUMMY follow-up milestone for standalone script testing."
+  }
+]

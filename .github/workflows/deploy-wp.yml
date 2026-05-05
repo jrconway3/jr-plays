@@ -1,0 +1,32 @@
+name: Deploy Latest WordPress Core
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 0' # Weekly on Sunday at 3am UTC
+
+jobs:
+  update-wordpress-core:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pull Production
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Pull Updates and Install Dependencies
+            cd "${{ secrets.REMOTE_DIR }}"
+            git pull origin production
+            # Download Latest Wordpress
+            curl -O https://wordpress.org/latest.zip
+            unzip -q latest.zip
+            # Copy WordPress core files (exclude wp-content, wp-config.php)
+            rsync -av --exclude='wp-content/' --exclude='wp-config.php' wordpress/ ./
+            # Clean up
+            rm -rf wordpress latest.zip
