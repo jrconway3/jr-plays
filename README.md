@@ -10,7 +10,7 @@ See [CLAUDE.md](CLAUDE.md) for full setup instructions.
 
 ```bash
 npm run dev        # Docker (recommended)
-npm run build      # Local XAMPP/PHP+MySQL
+npm run build      # Local XAMPP/PHP+MySQL (requires PHP >=8.2)
 npm test           # Lint + unit tests (requires Docker)
 ```
 

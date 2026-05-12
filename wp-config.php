@@ -46,6 +46,9 @@ define( 'LOGGED_IN_SALT',   getenv( 'WP_LOGGED_IN_SALT' ) );
 define( 'NONCE_SALT',       getenv( 'WP_NONCE_SALT' ) );
 
 $table_prefix = getenv( 'WP_DB_PREFIX' );
+if ( ! $table_prefix ) {
+    $table_prefix = 'wp_';
+}
 define( 'WP_DEBUG', false );
 
 // Allow direct filesystem access only in development (local/Docker).
@@ -61,11 +64,28 @@ if ( false !== $jr_enable_direct_fs ) {
 $jr_site_url = getenv( 'SITE_URL' );
 $jr_app_port = getenv( 'APP_PORT' );
 if ( $jr_site_url ) {
-    $jr_scheme   = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https' : 'http';
-    $jr_full_url = $jr_scheme . '://' . $jr_site_url;
-    if ( $jr_app_port && ! in_array( $jr_app_port, array( '80', '443' ), true ) && strpos( $jr_site_url, ':' ) === false ) {
-        $jr_full_url .= ':' . $jr_app_port;
+    // Determine scheme: allow explicit override via SITE_SCHEME, otherwise detect.
+    $jr_site_scheme = getenv( 'SITE_SCHEME' );
+    if ( ! $jr_site_scheme ) {
+        // Check reverse proxy headers first (common in Docker/load-balanced environments).
+        $jr_site_scheme = isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ? $_SERVER['HTTP_X_FORWARDED_PROTO'] : false;
+        // Fall back to HTTPS check if not proxied.
+        if ( ! $jr_site_scheme ) {
+            $jr_site_scheme = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https' : 'http';
+        }
     }
+
+    // If SITE_URL includes a scheme, use it as-is; otherwise build from scheme + host.
+    if ( strpos( $jr_site_url, '://' ) !== false ) {
+        $jr_full_url = $jr_site_url;
+    } else {
+        $jr_full_url = $jr_site_scheme . '://' . $jr_site_url;
+        // Append port if provided and not standard (80 for http, 443 for https).
+        if ( $jr_app_port && ! in_array( $jr_app_port, array( '80', '443' ), true ) && strpos( $jr_site_url, ':' ) === false ) {
+            $jr_full_url .= ':' . $jr_app_port;
+        }
+    }
+
     define( 'WP_HOME', $jr_full_url );
     define( 'WP_SITEURL', $jr_full_url );
 }
