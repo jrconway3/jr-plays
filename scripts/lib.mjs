@@ -165,8 +165,7 @@ export function importDumpIntoDockerDb(dumpPath) {
   const dockerEnv = readDotEnv(dockerEnvPath());
 
   const dbName = dockerEnv.get('WP_DB_NAME') || 'jr_local';
-  const dbUser = dockerEnv.get('WP_DB_USER') || 'wordpress';
-  const dbPassword = dockerEnv.get('WP_DB_PASSWORD') || 'wordpress';
+  const rootPassword = dockerEnv.get('MYSQL_ROOT_PASSWORD') || 'root';
   const dumpBuffer = readDumpBuffer(dumpPath);
 
   const result = spawnSync(
@@ -180,7 +179,7 @@ export function importDumpIntoDockerDb(dumpPath) {
       'db',
       'bash',
       '-lc',
-      `mariadb -u"${dbUser}" -p"${dbPassword}" "${dbName}"`,
+      `mariadb -uroot -p"${rootPassword}" "${dbName}"`,
     ],
     {
       cwd: repoRoot,
