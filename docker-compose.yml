@@ -8,14 +8,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - path: .env.docker
+        required: false
     environment:
       APACHE_DOCUMENT_ROOT: /var/www/html
-      WP_DB_NAME: ${WP_DB_NAME}
-      WP_DB_USER: ${WP_DB_USER}
-      WP_DB_PASSWORD: ${WP_DB_PASSWORD}
-      WP_DB_HOST: ${WP_DB_HOST:-db}
-      WP_DB_PORT: ${WP_DB_PORT:-3306}
-      WP_DB_PREFIX: ${WP_DB_PREFIX:-wp_}
     ports:
       - "${APP_PORT:-8080}:80"
     volumes:
@@ -25,8 +22,8 @@ services:
     image: mariadb:10.11
     environment:
       MYSQL_DATABASE: ${WP_DB_NAME:-jr_local}
-      MYSQL_USER: ${WP_DB_USER:-wordpress}
-      MYSQL_PASSWORD: ${WP_DB_PASSWORD:-wordpress}
+      MYSQL_USER: ${DOCKER_DB_USER:-wordpress}
+      MYSQL_PASSWORD: ${DOCKER_DB_PASSWORD:-wordpress}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     healthcheck:
       test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]

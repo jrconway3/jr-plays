@@ -5,23 +5,24 @@
  * @package WordPress
  */
 
-// Fallback to .env only when the runtime did not inject required values.
-if ( false === getenv( 'WP_DB_NAME' ) && file_exists( __DIR__ . '/.env' ) && file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
     require_once __DIR__ . '/vendor/autoload.php';
-
-    if ( class_exists( '\\Dotenv\\Dotenv' ) ) {
-        Dotenv\Dotenv::createImmutable( __DIR__ )->safeLoad();
-    }
 }
 
-// Allow .env to be loaded in Docker too (for SITE_URL/APP_PORT even when WP_DB_NAME is set).
-if ( file_exists( __DIR__ . '/.env.docker' ) && file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
-    if ( ! class_exists( '\\Dotenv\\Dotenv' ) ) {
-        require_once __DIR__ . '/vendor/autoload.php';
+if ( class_exists( '\\Dotenv\\Dotenv' ) ) {
+    $jr_in_docker = file_exists( '/.dockerenv' );
+
+    // In Docker: load .env.docker first so its values win, then .env fills gaps (e.g. auth salts).
+    // Outside Docker: only load .env.
+    if ( $jr_in_docker && file_exists( __DIR__ . '/.env.docker' ) ) {
+        Dotenv\Dotenv::createUnsafeImmutable( __DIR__, '.env.docker' )->safeLoad();
     }
-    if ( class_exists( '\\Dotenv\\Dotenv' ) ) {
-        Dotenv\Dotenv::createImmutable( __DIR__, '.env.docker' )->safeLoad();
+
+    if ( file_exists( __DIR__ . '/.env' ) ) {
+        Dotenv\Dotenv::createUnsafeImmutable( __DIR__, '.env' )->safeLoad();
     }
+
+    unset( $jr_in_docker );
 }
 
 define( 'DB_NAME', getenv( 'WP_DB_NAME' ) );

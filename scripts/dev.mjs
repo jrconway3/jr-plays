@@ -40,7 +40,7 @@ const dockerEnvValues = ensureSpecificEnvFile(dockerEnvPath(), dockerEnvExampleP
 
 const defaults = new Map([
   ['SITE_URL', 'jr-plays.localhost'],
-  
+
   ['APP_PORT', '8080'],
   ['MYSQL_ROOT_PASSWORD', 'root'],
   ['LOCAL_DB_DUMP', ''],
@@ -51,8 +51,10 @@ const defaults = new Map([
   ['WP_DB_NAME', 'jr_local'],
   ['WP_DB_USER', 'wordpress'],
   ['WP_DB_PASSWORD', 'wordpress'],
-  ['WP_DB_HOST', 'localhost'],
+  ['WP_DB_HOST', 'db'],
   ['WP_DB_PREFIX', 'wp_'],
+  ['DOCKER_DB_USER', 'wordpress'],
+  ['DOCKER_DB_PASSWORD', 'wordpress'],
   ['MAILPIT_SMTP_PORT', '1025'],
   ['MAILPIT_UI_PORT', '8025'],
 ]);
@@ -73,8 +75,15 @@ if (useHostDatabase) {
   dockerEnvValues.set('WP_DB_PASSWORD', normalizedPassword(envValues.get('WP_DB_PASSWORD')));
   dockerEnvValues.set('WP_DB_HOST', appDbHost === 'localhost' ? 'host.docker.internal' : appDbHost);
   dockerEnvValues.set('WP_DB_PORT', envValues.get('WP_DB_PORT') || '3306');
+  // Keep the docker-managed MariaDB using safe non-root credentials so its
+  // MYSQL_USER init doesn't conflict with the built-in root account.
+  dockerEnvValues.set('DOCKER_DB_USER', 'wordpress');
+  dockerEnvValues.set('DOCKER_DB_PASSWORD', 'wordpress');
 } else {
+  dockerEnvValues.set('WP_DB_HOST', 'db');
   dockerEnvValues.set('WP_DB_PORT', '3306');
+  dockerEnvValues.set('DOCKER_DB_USER', envValues.get('WP_DB_USER') || 'wordpress');
+  dockerEnvValues.set('DOCKER_DB_PASSWORD', normalizedPassword(envValues.get('WP_DB_PASSWORD')) || 'wordpress');
 }
 
 writeDotEnv(dockerEnvPath(), dockerEnvValues);
