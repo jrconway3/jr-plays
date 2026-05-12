@@ -68,8 +68,17 @@ if ( $jr_site_url ) {
     $jr_site_scheme = getenv( 'SITE_SCHEME' );
     if ( ! $jr_site_scheme ) {
         // Check reverse proxy headers first (common in Docker/load-balanced environments).
-        $jr_site_scheme = isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ? $_SERVER['HTTP_X_FORWARDED_PROTO'] : false;
-        // Fall back to HTTPS check if not proxied.
+        // Only accept trusted schemes to prevent header injection.
+        if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
+            $forwarded_scheme = strtolower( trim( (string) $_SERVER['HTTP_X_FORWARDED_PROTO'] ) );
+            // Handle comma-separated values (take first token) and whitelist.
+            $forwarded_scheme = explode( ',', $forwarded_scheme )[0];
+            $forwarded_scheme = trim( $forwarded_scheme );
+            if ( in_array( $forwarded_scheme, array( 'http', 'https' ), true ) ) {
+                $jr_site_scheme = $forwarded_scheme;
+            }
+        }
+        // Fall back to HTTPS check if not proxied or proxy header invalid.
         if ( ! $jr_site_scheme ) {
             $jr_site_scheme = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https' : 'http';
         }
