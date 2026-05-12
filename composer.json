@@ -1,6 +1,6 @@
 {
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.2",
         "michelf/php-markdown": "1.4.0",
         "michelf/php-smartypants": "1.6.0-beta1",
         "timber/timber": "^2.0",

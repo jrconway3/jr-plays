@@ -1,10 +1,12 @@
 # JR Plays
 
-Personal WordPress multisite site for JaidynReiman — gaming content creator.
+Personal WordPress site for JaidynReiman — gaming content creator. This repository is intended to support a multisite-style setup, but the committed configuration is **not** multisite-enabled by default.
 
 ## Local Development
 
 See [CLAUDE.md](CLAUDE.md) for full setup instructions.
+
+**Multisite note:** the checked-in repo runs as a standard single-site WordPress install unless you add the required WordPress multisite configuration locally (for example `MULTISITE`, `SUBDOMAIN_INSTALL`, and related network settings in `wp-config.php`) and complete WordPress network setup. See [CLAUDE.md](CLAUDE.md) for full setup instructions.
 
 ```bash
 npm run dev        # Docker (recommended)

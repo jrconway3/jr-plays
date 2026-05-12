@@ -14,6 +14,16 @@ if ( false === getenv( 'WP_DB_NAME' ) && file_exists( __DIR__ . '/.env' ) && fil
     }
 }
 
+// Allow .env to be loaded in Docker too (for SITE_URL/APP_PORT even when WP_DB_NAME is set).
+if ( file_exists( __DIR__ . '/.env.docker' ) && file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+    if ( ! class_exists( '\\Dotenv\\Dotenv' ) ) {
+        require_once __DIR__ . '/vendor/autoload.php';
+    }
+    if ( class_exists( '\\Dotenv\\Dotenv' ) ) {
+        Dotenv\Dotenv::createImmutable( __DIR__, '.env.docker' )->safeLoad();
+    }
+}
+
 define( 'DB_NAME', getenv( 'WP_DB_NAME' ) );
 define( 'DB_USER', getenv( 'WP_DB_USER' ) );
 
@@ -38,7 +48,15 @@ define( 'NONCE_SALT',       getenv( 'WP_NONCE_SALT' ) );
 $table_prefix = getenv( 'WP_DB_PREFIX' );
 define( 'WP_DEBUG', false );
 
-define( 'FS_METHOD', 'direct' );
+// Allow direct filesystem access only in development (local/Docker).
+// Production should rely on safer defaults or explicit environment flag.
+$jr_enable_direct_fs = getenv( 'WP_ENABLE_DIRECT_FS' );
+if ( false !== $jr_enable_direct_fs ) {
+    $jr_enable_direct_fs = strtolower( trim( (string) $jr_enable_direct_fs ) );
+    if ( in_array( $jr_enable_direct_fs, array( '1', 'true', 'yes', 'on' ), true ) ) {
+        define( 'FS_METHOD', 'direct' );
+    }
+}
 
 $jr_site_url = getenv( 'SITE_URL' );
 $jr_app_port = getenv( 'APP_PORT' );
