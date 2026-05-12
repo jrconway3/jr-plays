@@ -38,6 +38,20 @@ define( 'NONCE_SALT',       getenv( 'WP_NONCE_SALT' ) );
 $table_prefix = getenv( 'WP_DB_PREFIX' );
 define( 'WP_DEBUG', false );
 
+define( 'FS_METHOD', 'direct' );
+
+$jr_site_url = getenv( 'SITE_URL' );
+$jr_app_port = getenv( 'APP_PORT' );
+if ( $jr_site_url ) {
+    $jr_scheme   = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https' : 'http';
+    $jr_full_url = $jr_scheme . '://' . $jr_site_url;
+    if ( $jr_app_port && ! in_array( $jr_app_port, array( '80', '443' ), true ) && strpos( $jr_site_url, ':' ) === false ) {
+        $jr_full_url .= ':' . $jr_app_port;
+    }
+    define( 'WP_HOME', $jr_full_url );
+    define( 'WP_SITEURL', $jr_full_url );
+}
+
 define( 'AUTOSAVE_INTERVAL', 300 );
 define( 'WP_POST_REVISIONS', 5 );
 define( 'EMPTY_TRASH_DAYS', 7 );
