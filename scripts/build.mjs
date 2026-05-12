@@ -14,6 +14,7 @@ import {
   envPath,
   envExamplePath,
   resolveRepoPath,
+  ensureEnvFile,
 } from './lib.mjs';
 import {
   ensureHtaccess,
@@ -94,6 +95,7 @@ console.log('🔨 Building local WordPress environment (non-Docker)...\n');
 
 // Step 1: Initialize environment and .htaccess
 ensureHtaccess();
+ensureEnvFile();  // Auto-create .env from .env.example if missing
 const { envValues, siteUrl } = initializeEnvironment(envPath(), envExamplePath());
 
 console.log(`✓ Environment initialized: ${siteUrl}\n`);

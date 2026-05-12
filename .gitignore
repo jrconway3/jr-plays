@@ -42,3 +42,4 @@ wp-content/cache/
 wp-content/upgrade/
 wp-content/advanced-cache.php
 wp-content/wp-cache-config.php
+wp-content/plugins/wordpress-importer

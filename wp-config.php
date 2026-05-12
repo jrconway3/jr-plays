@@ -14,6 +14,16 @@ if ( false === getenv( 'WP_DB_NAME' ) && file_exists( __DIR__ . '/.env' ) && fil
     }
 }
 
+// Allow .env to be loaded in Docker too (for SITE_URL/APP_PORT even when WP_DB_NAME is set).
+if ( file_exists( __DIR__ . '/.env.docker' ) && file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+    if ( ! class_exists( '\\Dotenv\\Dotenv' ) ) {
+        require_once __DIR__ . '/vendor/autoload.php';
+    }
+    if ( class_exists( '\\Dotenv\\Dotenv' ) ) {
+        Dotenv\Dotenv::createImmutable( __DIR__, '.env.docker' )->safeLoad();
+    }
+}
+
 define( 'DB_NAME', getenv( 'WP_DB_NAME' ) );
 define( 'DB_USER', getenv( 'WP_DB_USER' ) );
 
@@ -36,7 +46,58 @@ define( 'LOGGED_IN_SALT',   getenv( 'WP_LOGGED_IN_SALT' ) );
 define( 'NONCE_SALT',       getenv( 'WP_NONCE_SALT' ) );
 
 $table_prefix = getenv( 'WP_DB_PREFIX' );
+if ( ! $table_prefix ) {
+    $table_prefix = 'wp_';
+}
 define( 'WP_DEBUG', false );
+
+// Allow direct filesystem access only in development (local/Docker).
+// Production should rely on safer defaults or explicit environment flag.
+$jr_enable_direct_fs = getenv( 'WP_ENABLE_DIRECT_FS' );
+if ( false !== $jr_enable_direct_fs ) {
+    $jr_enable_direct_fs = strtolower( trim( (string) $jr_enable_direct_fs ) );
+    if ( in_array( $jr_enable_direct_fs, array( '1', 'true', 'yes', 'on' ), true ) ) {
+        define( 'FS_METHOD', 'direct' );
+    }
+}
+
+$jr_site_url = getenv( 'SITE_URL' );
+$jr_app_port = getenv( 'APP_PORT' );
+if ( $jr_site_url ) {
+    // Determine scheme: allow explicit override via SITE_SCHEME, otherwise detect.
+    $jr_site_scheme = getenv( 'SITE_SCHEME' );
+    if ( ! $jr_site_scheme ) {
+        // Check reverse proxy headers first (common in Docker/load-balanced environments).
+        // Only accept trusted schemes to prevent header injection.
+        if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
+            $forwarded_scheme = strtolower( trim( (string) $_SERVER['HTTP_X_FORWARDED_PROTO'] ) );
+            // Handle comma-separated values (take first token) and whitelist.
+            $forwarded_scheme = explode( ',', $forwarded_scheme )[0];
+            $forwarded_scheme = trim( $forwarded_scheme );
+            if ( in_array( $forwarded_scheme, array( 'http', 'https' ), true ) ) {
+                $jr_site_scheme = $forwarded_scheme;
+            }
+        }
+        // Fall back to HTTPS check if not proxied or proxy header invalid.
+        if ( ! $jr_site_scheme ) {
+            $jr_site_scheme = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https' : 'http';
+        }
+    }
+
+    // If SITE_URL includes a scheme, use it as-is; otherwise build from scheme + host.
+    if ( strpos( $jr_site_url, '://' ) !== false ) {
+        $jr_full_url = $jr_site_url;
+    } else {
+        $jr_full_url = $jr_site_scheme . '://' . $jr_site_url;
+        // Append port if provided and not standard (80 for http, 443 for https).
+        if ( $jr_app_port && ! in_array( $jr_app_port, array( '80', '443' ), true ) && strpos( $jr_site_url, ':' ) === false ) {
+            $jr_full_url .= ':' . $jr_app_port;
+        }
+    }
+
+    define( 'WP_HOME', $jr_full_url );
+    define( 'WP_SITEURL', $jr_full_url );
+}
 
 define( 'AUTOSAVE_INTERVAL', 300 );
 define( 'WP_POST_REVISIONS', 5 );

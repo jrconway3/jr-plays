@@ -7,6 +7,9 @@
 [submodule "wp-content/plugins/jr-creator-media"]
 	path = wp-content/plugins/jr-creator-media
 	url = https://github.com/jrconway3/jr-creator-media.git
+[submodule "wp-content/plugins/jr-legacy-content"]
+	path = wp-content/plugins/jr-legacy-content
+	url = https://github.com/jrconway3/jr-legacy-content.git
 [submodule "wp-content/plugins/jr-content-admin"]
 	path = wp-content/plugins/jr-content-admin
 	url = https://github.com/jrconway3/jr-content-admin.git
