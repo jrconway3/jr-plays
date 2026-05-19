@@ -1,0 +1,92 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+# Queue deploys so a running deploy is never cancelled mid-flight.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+  THEME_DIR: wp-content/themes/jr-plays-theme
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Guard against workflow_dispatch runs from non-production branches/tags.
+    if: github.ref == 'refs/heads/production'
+
+    steps:
+      # ── 1. Source ─────────────────────────────────────────────────────────────
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          submodules: recursive
+
+      # ── 2. Node (needed before npm run lint) ──────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ${{ env.THEME_DIR }}/package-lock.json
+
+      # ── 3. Lint gate ──────────────────────────────────────────────────────────
+      # Unit tests require a running database so they run in ci.yml on PRs.
+      # Branch protection should require ci.yml to pass before merging to production.
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction
+
+      - name: Run PHP lint
+        run: npm run lint
+
+      # ── 4. Build theme assets ─────────────────────────────────────────────────
+      - name: Build theme assets
+        working-directory: ${{ env.THEME_DIR }}
+        run: npm ci && npm run build:assets
+
+      # ── 5. SSH key ────────────────────────────────────────────────────────────
+      # SSH_KNOWN_HOST must be the pre-verified host key line for your server.
+      # Obtain it once with: ssh-keyscan -p <PORT> <HOST>
+      # Store the output line as the SSH_KNOWN_HOST repository secret.
+      - name: Install SSH key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/deploy_key
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
+
+      # ── 6. Pull code on server ────────────────────────────────────────────────
+      - name: Pull & update server
+        env:
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_REF: ${{ github.ref_name }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "set -euo pipefail
+             cd \"$REMOTE_DIR\"
+             git fetch origin production
+             git fetch origin \"$DEPLOY_REF\"
+             git reset --hard $DEPLOY_SHA
+             git submodule update --init --recursive
+             composer install --no-dev --optimize-autoloader --no-interaction"
+
+      # ── 7. Sync built assets ──────────────────────────────────────────────────
+      - name: Sync built theme assets
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT" \
+            "$THEME_DIR/assets/dist/" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.REMOTE_DIR }}/$THEME_DIR/assets/dist/"

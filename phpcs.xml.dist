@@ -5,6 +5,7 @@
     <rule ref="WordPress-Extra" />
     <file>wp-content/plugins/jr-content-core</file>
     <file>wp-content/plugins/jr-content-admin</file>
+    <file>wp-content/mu-plugins</file>
     <file>tests</file>
     <file>wp-config.php</file>
     <exclude-pattern>*/vendor/*</exclude-pattern>
