@@ -19,9 +19,10 @@ add_action(
 		$smtp_port = getenv( 'WP_SMTP_PORT' );
 		if ( $smtp_host ) {
 			$phpmailer->isSMTP();
-			$phpmailer->Host     = $smtp_host;
-			$phpmailer->Port     = $smtp_port ?: 1025;
-			$phpmailer->SMTPAuth = false;
+			$phpmailer->Host     = $smtp_host; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			$smtp_port_int       = is_numeric( $smtp_port ) ? (int) $smtp_port : 0;
+			$phpmailer->Port     = ( $smtp_port_int >= 1 && $smtp_port_int <= 65535 ) ? $smtp_port_int : 1025; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			$phpmailer->SMTPAuth = false; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		}
 	}
 );
