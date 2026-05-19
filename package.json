@@ -8,7 +8,7 @@
     },
     "scripts":  {
         "setup:prod":  "node scripts/setup-production.mjs",
-    "dev":  "node scripts/dev.mjs",
+        "dev":  "node scripts/dev.mjs",
         "build":  "node scripts/build.mjs",
         "build:local":  "npm run build",
         "setup:local":  "npm run build",

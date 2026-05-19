@@ -57,6 +57,8 @@ const defaults = new Map([
   ['DOCKER_DB_PASSWORD', 'wordpress'],
   ['MAILPIT_SMTP_PORT', '1025'],
   ['MAILPIT_UI_PORT', '8025'],
+  ['WP_SMTP_HOST', 'mailpit'],
+  ['WP_SMTP_PORT', '1025'],
 ]);
 
 for (const [key, value] of defaults) {
