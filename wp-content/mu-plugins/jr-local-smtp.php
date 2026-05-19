@@ -8,6 +8,10 @@
  * @package JRPlays
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 add_action(
 	'phpmailer_init',
 	function ( $phpmailer ) {

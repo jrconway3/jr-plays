@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
 
 # Queue deploys so a running deploy is never cancelled mid-flight.
-# An in-progress deploy owns the server; the next one waits until it finishes.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -18,6 +17,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Guard against workflow_dispatch runs from non-production branches/tags.
+    if: github.ref == 'refs/heads/production'
 
     steps:
       # ── 1. Source ─────────────────────────────────────────────────────────────
@@ -27,7 +28,17 @@ jobs:
           ref: ${{ github.sha }}
           submodules: recursive
 
-      # ── 2. Lint ───────────────────────────────────────────────────────────────
+      # ── 2. Node (needed before npm run lint) ──────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ${{ env.THEME_DIR }}/package-lock.json
+
+      # ── 3. Lint gate ──────────────────────────────────────────────────────────
+      # Unit tests require a running database so they run in ci.yml on PRs.
+      # Branch protection should require ci.yml to pass before merging to production.
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -40,29 +51,22 @@ jobs:
       - name: Run PHP lint
         run: npm run lint
 
-      # ── 3. Build theme assets ─────────────────────────────────────────────────
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: ${{ env.THEME_DIR }}/package-lock.json
-
+      # ── 4. Build theme assets ─────────────────────────────────────────────────
       - name: Build theme assets
         working-directory: ${{ env.THEME_DIR }}
         run: npm ci && npm run build:assets
 
-      # ── 4. SSH key ────────────────────────────────────────────────────────────
-      # SSH_KNOWN_HOST must contain the pre-verified server host key.
+      # ── 5. SSH key ────────────────────────────────────────────────────────────
+      # SSH_KNOWN_HOST must be the pre-verified host key line for your server.
       # Obtain it once with: ssh-keyscan -p <PORT> <HOST>
-      # then store the output line as the SSH_KNOWN_HOST repository secret.
+      # Store the output line as the SSH_KNOWN_HOST repository secret.
       - name: Install SSH key
         run: |
           install -m 600 -D /dev/null ~/.ssh/deploy_key
           printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           printf '%s\n' "${{ secrets.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
 
-      # ── 5. Pull code on server ────────────────────────────────────────────────
+      # ── 6. Pull code on server ────────────────────────────────────────────────
       - name: Pull & update server
         env:
           REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
@@ -79,7 +83,7 @@ jobs:
              git submodule update --init --recursive
              composer install --no-dev --optimize-autoloader --no-interaction"
 
-      # ── 6. Sync built assets ──────────────────────────────────────────────────
+      # ── 7. Sync built assets ──────────────────────────────────────────────────
       - name: Sync built theme assets
         run: |
           rsync -az --delete \
