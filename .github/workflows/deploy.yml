@@ -13,6 +13,7 @@ concurrency:
 env:
   SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
   THEME_DIR: wp-content/themes/jr-plays-theme
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   deploy:
@@ -32,7 +33,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: ${{ env.THEME_DIR }}/package-lock.json
 
@@ -73,20 +74,21 @@ jobs:
           DEPLOY_SHA: ${{ github.sha }}
           DEPLOY_REF: ${{ github.ref_name }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+          ssh -i ~/.ssh/deploy_key \
+            -p "${SSH_PORT:-22}" \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "set -euo pipefail
-             cd \"$REMOTE_DIR\"
-             git fetch origin production
-             git fetch origin \"$DEPLOY_REF\"
-             git reset --hard $DEPLOY_SHA
-             git submodule update --init --recursive
-             composer install --no-dev --optimize-autoloader --no-interaction"
+            "set -euo pipefail \
+             && cd \"$REMOTE_DIR\" \
+             && git fetch origin production \
+             && git fetch origin \"$DEPLOY_REF\" \
+             && git reset --hard $DEPLOY_SHA \
+             && git submodule update --init --recursive \
+             && composer install --no-dev --optimize-autoloader --no-interaction"
 
       # ── 7. Sync built assets ──────────────────────────────────────────────────
       - name: Sync built theme assets
         run: |
           rsync -az --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT" \
+            -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-22}" \
             "$THEME_DIR/assets/dist/" \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.REMOTE_DIR }}/$THEME_DIR/assets/dist/"
