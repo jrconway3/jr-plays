@@ -72,8 +72,8 @@ jobs:
       - name: Install SSH key
         run: |
           install -m 600 -D /dev/null ~/.ssh/deploy_key
-          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          printf '%s\n' "${{ secrets.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          ssh-keyscan -p "${SSH_PORT:-22}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       # ── 6. Pull & update server ──────────────────────────────────────────────
       - name: Pull & update server
