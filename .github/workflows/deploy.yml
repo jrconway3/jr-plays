@@ -87,9 +87,14 @@ jobs:
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "set -euo pipefail \
              && cd \"$REMOTE_DIR\" \
+             && git stash || true \
              && git fetch origin production \
              && git fetch origin \"$DEPLOY_REF\" \
              && git reset --hard $DEPLOY_SHA \
              && git submodule update --init --recursive \
-             && composer install --no-dev --optimize-autoloader --no-interaction"
+             && git stash apply || true \
+             && composer install --no-dev --optimize-autoloader --no-interaction \
+             && cd \"$REMOTE_DIR/wp-content/themes/jr-plays-theme\" \
+             && npm ci \
+             && npm run build:assets"
 
